@@ -160,7 +160,12 @@ public class GraphQlClientSourceGenerator : IIncrementalGenerator
             reportDiagnostic(Diagnostic.Create(DescriptorInfo, Location.None, $"\"GraphQlClientGenerator_Namespace\" not specified; using \"{@namespace}\""));
         }
 
-        var configuration = new GraphQlGeneratorConfiguration { TargetNamespace = @namespace };
+        var configuration =
+            new GraphQlGeneratorConfiguration
+            {
+                TargetNamespace = @namespace,
+                ScalarFieldTypeMappingProvider = DefaultScalarFieldTypeMappingProvider.Instance
+            };
 
         globalOptions.TryGetValue(BuildPropertyKey(nameof(configuration.ClassPrefix)), out var classPrefix);
         configuration.ClassPrefix = classPrefix;

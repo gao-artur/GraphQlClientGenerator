@@ -33,7 +33,10 @@ public static class GraphQlHttpUtilities
     {
         var request = new HttpRequestMessage(method, url);
         if (request.Method == HttpMethod.Get)
-            request.RequestUri = new($"{request.RequestUri}?&query={queryText}");
+        {
+            var separator = String.IsNullOrEmpty(request.RequestUri.Query) ? '?' : '&';
+            request.RequestUri = new($"{request.RequestUri}{separator}query={Uri.EscapeDataString(queryText)}");
+        }
         else
             request.Content = new StringContent(JsonConvert.SerializeObject(new { query = queryText }), Encoding.UTF8, "application/json");
 

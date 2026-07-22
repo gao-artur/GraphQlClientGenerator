@@ -4,7 +4,6 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Newtonsoft.Json;
-using Xunit.Abstractions;
 
 namespace GraphQlClientGenerator.Test;
 

@@ -55,10 +55,10 @@ public static class GraphQlHttpUtilities
                 ? "(no content)"
                 : await response.Content.ReadAsStringAsync();
 
-        if (!response.IsSuccessStatusCode)
-            throw new InvalidOperationException($"Status code: {(int)response.StatusCode} ({response.StatusCode}); content:{Environment.NewLine}{content}");
-
-        return content;
+        return
+            response.IsSuccessStatusCode
+                ? content
+                : throw new InvalidOperationException($"Status code: {(int)response.StatusCode} ({response.StatusCode}); content:{Environment.NewLine}{content}");
     }
 
     public static async Task<GraphQlSchema> RetrieveSchema(

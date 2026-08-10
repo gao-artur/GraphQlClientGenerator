@@ -10,7 +10,7 @@
     <PackageTags>GraphQL Client Generator Tool Console</PackageTags>
     <PackageReleaseNotes>
       <![CDATA[
-      upgrade System.CommandLine
+	  added new directive location DIRECTIVE_DEFINITION
       ]]>
     </PackageReleaseNotes>
     <PackAsTool>true</PackAsTool>

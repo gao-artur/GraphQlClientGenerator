@@ -9,9 +9,8 @@
     <Title>GraphQL C# Client Generator</Title>
     <PackageTags>GraphQL Client Generator</PackageTags>
     <PackageReleaseNotes>
-      <![CDATA[include "IsDeprecated" into GraphQlFieldMetadata
-include GraphQl.NET default scalars into default scalar field type mapping provider
-improve generation customizations
+      <![CDATA[
+	  added new directive location DIRECTIVE_DEFINITION
       ]]>
     </PackageReleaseNotes>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>

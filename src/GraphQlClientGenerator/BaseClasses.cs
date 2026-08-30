@@ -16,6 +16,12 @@ public enum Formatting
 
 public class GraphQlObjectTypeAttribute : global::System.Attribute
 {
+    internal static readonly IReadOnlyDictionary<string, global::System.Type> InterfaceTypeMapping =
+        typeof(GraphQlObjectTypeAttribute).Assembly.GetTypes()
+            .Select(t => new { Type = t, Attribute = t.GetCustomAttribute<GraphQlObjectTypeAttribute>() })
+            .Where(x => x.Attribute != null && x.Type.Namespace == typeof(GraphQlObjectTypeAttribute).Namespace)
+            .ToDictionary(x => x.Attribute.TypeName, x => x.Type);
+
     public string TypeName { get; }
 
     public GraphQlObjectTypeAttribute(string typeName) => TypeName = typeName;
@@ -51,12 +57,6 @@ public class GraphQlInterfaceJsonConverter : global::Newtonsoft.Json.JsonConvert
 {
     private const string FieldNameType = "__typename";
 
-    private static readonly Dictionary<string, global::System.Type> InterfaceTypeMapping =
-        typeof(GraphQlInterfaceJsonConverter).Assembly.GetTypes()
-            .Select(t => new { Type = t, Attribute = t.GetCustomAttribute<GraphQlObjectTypeAttribute>() })
-            .Where(x => x.Attribute != null && x.Type.Namespace == typeof(GraphQlInterfaceJsonConverter).Namespace)
-            .ToDictionary(x => x.Attribute.TypeName, x => x.Type);
-
     public override bool CanConvert(global::System.Type objectType) => objectType.IsInterface || objectType.IsArray;
 
     public override object ReadJson(JsonReader reader, global::System.Type objectType, object existingValue, JsonSerializer serializer)
@@ -75,7 +75,7 @@ public class GraphQlInterfaceJsonConverter : global::Newtonsoft.Json.JsonConvert
                     throw CreateJsonReaderException(reader, $"\"{GetType().FullName}\" requires JSON object to contain \"{FieldNameType}\" field with type name");
 
                 var typeName = token.Value<string>();
-                if (!InterfaceTypeMapping.TryGetValue(typeName, out var type))
+                if (!GraphQlObjectTypeAttribute.InterfaceTypeMapping.TryGetValue(typeName, out var type))
                     throw CreateJsonReaderException(reader, $"type \"{typeName}\" not found");
 
                 using (reader = CloneReader(jObject, reader))
@@ -135,6 +135,96 @@ public class GraphQlInterfaceJsonConverter : global::Newtonsoft.Json.JsonConvert
 
     private static IList CreateCompatibleList(global::System.Type targetContainerType, global::System.Type elementType) =>
         (IList)Activator.CreateInstance(targetContainerType.IsArray || targetContainerType.IsAbstract ? typeof(List<>).MakeGenericType(elementType) : targetContainerType);
+}
+#endif
+
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+public class QueryBuilderParameterSystemTextJsonConverter<T> : global::System.Text.Json.Serialization.JsonConverter<QueryBuilderParameter<T>>
+{
+    public override QueryBuilderParameter<T> Read(ref global::System.Text.Json.Utf8JsonReader reader, global::System.Type typeToConvert, global::System.Text.Json.JsonSerializerOptions options) =>
+        (QueryBuilderParameter<T>)global::System.Text.Json.JsonSerializer.Deserialize<T>(ref reader, options);
+
+    public override void Write(global::System.Text.Json.Utf8JsonWriter writer, QueryBuilderParameter<T> value, global::System.Text.Json.JsonSerializerOptions options) =>
+        global::System.Text.Json.JsonSerializer.Serialize(writer, value.Value, options);
+}
+
+public class GraphQlInterfaceSystemTextJsonConverter : global::System.Text.Json.Serialization.JsonConverterFactory
+{
+    private const string FieldNameType = "__typename";
+
+    public override bool CanConvert(global::System.Type objectType) => objectType.IsInterface;
+
+    public override global::System.Text.Json.Serialization.JsonConverter CreateConverter(global::System.Type typeToConvert, global::System.Text.Json.JsonSerializerOptions options) =>
+        (global::System.Text.Json.Serialization.JsonConverter)Activator.CreateInstance(typeof(GraphQlInterfaceConverter<>).MakeGenericType(typeToConvert));
+
+    private class GraphQlInterfaceConverter<T> : global::System.Text.Json.Serialization.JsonConverter<T> where T : class
+    {
+        public override T Read(ref global::System.Text.Json.Utf8JsonReader reader, global::System.Type typeToConvert, global::System.Text.Json.JsonSerializerOptions options)
+        {
+            using (var jsonDocument = global::System.Text.Json.JsonDocument.ParseValue(ref reader))
+            {
+                if (jsonDocument.RootElement.ValueKind != global::System.Text.Json.JsonValueKind.Object)
+                    throw new global::System.Text.Json.JsonException($"unrecognized JSON value kind: {jsonDocument.RootElement.ValueKind}");
+
+                if (!jsonDocument.RootElement.TryGetProperty(FieldNameType, out var typeNameElement) || typeNameElement.ValueKind != global::System.Text.Json.JsonValueKind.String)
+                    throw new global::System.Text.Json.JsonException($"\"{typeof(GraphQlInterfaceSystemTextJsonConverter).FullName}\" requires JSON object to contain \"{FieldNameType}\" field with type name");
+
+                var typeName = typeNameElement.GetString();
+                if (!GraphQlObjectTypeAttribute.InterfaceTypeMapping.TryGetValue(typeName, out var type))
+                    throw new global::System.Text.Json.JsonException($"type \"{typeName}\" not found");
+
+                return (T)global::System.Text.Json.JsonSerializer.Deserialize(jsonDocument.RootElement, type, options);
+            }
+        }
+
+        public override void Write(global::System.Text.Json.Utf8JsonWriter writer, T value, global::System.Text.Json.JsonSerializerOptions options) =>
+            global::System.Text.Json.JsonSerializer.Serialize(writer, value, value.GetType(), options);
+    }
+}
+
+public class StringEnumSystemTextJsonConverter : global::System.Text.Json.Serialization.JsonConverterFactory
+{
+    public override bool CanConvert(global::System.Type objectType) => objectType.IsEnum;
+
+    public override global::System.Text.Json.Serialization.JsonConverter CreateConverter(global::System.Type typeToConvert, global::System.Text.Json.JsonSerializerOptions options) =>
+        (global::System.Text.Json.Serialization.JsonConverter)Activator.CreateInstance(typeof(StringEnumConverter<>).MakeGenericType(typeToConvert));
+
+    private class StringEnumConverter<T> : global::System.Text.Json.Serialization.JsonConverter<T> where T : struct, Enum
+    {
+        private static readonly Dictionary<string, T> DeserializationMapping = new Dictionary<string, T>();
+        private static readonly Dictionary<T, string> SerializationMapping = new Dictionary<T, string>();
+
+        static StringEnumConverter()
+        {
+            foreach (var field in typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static))
+            {
+                var value = (T)field.GetValue(null);
+                var enumMemberAttribute = (EnumMemberAttribute)field.GetCustomAttribute(typeof(EnumMemberAttribute));
+                var serializedValue = enumMemberAttribute?.Value ?? field.Name;
+                DeserializationMapping[serializedValue] = value;
+                SerializationMapping[value] = serializedValue;
+            }
+        }
+
+        public override T Read(ref global::System.Text.Json.Utf8JsonReader reader, global::System.Type typeToConvert, global::System.Text.Json.JsonSerializerOptions options)
+        {
+            if (reader.TokenType != global::System.Text.Json.JsonTokenType.String)
+                throw new global::System.Text.Json.JsonException($"unexpected token type: {reader.TokenType}; expected enum string value");
+
+            var stringValue = reader.GetString();
+            if (DeserializationMapping.TryGetValue(stringValue, out var value))
+                return value;
+
+            foreach (var kvp in DeserializationMapping)
+                if (String.Equals(kvp.Key, stringValue, StringComparison.OrdinalIgnoreCase))
+                    return kvp.Value;
+
+            throw new global::System.Text.Json.JsonException($"value \"{stringValue}\" not defined in enum \"{typeof(T).FullName}\"");
+        }
+
+        public override void Write(global::System.Text.Json.Utf8JsonWriter writer, T value, global::System.Text.Json.JsonSerializerOptions options) =>
+            writer.WriteStringValue(SerializationMapping.TryGetValue(value, out var serializedValue) ? serializedValue : value.ToString());
+    }
 }
 #endif
 
@@ -367,7 +457,7 @@ public class DefaultGraphQlArgumentBuilder : IGraphQlArgumentBuilder
 {
     private static readonly Regex RegexWhiteSpace = new Regex(@"\s", RegexOptions.Compiled);
 
-    public static readonly DefaultGraphQlArgumentBuilder Instance = new();
+    public static readonly DefaultGraphQlArgumentBuilder Instance = new DefaultGraphQlArgumentBuilder();
 
     public bool TryBuild(GraphQlArgumentBuilderContext context, out string graphQlString)
     {
@@ -398,10 +488,7 @@ public class DefaultGraphQlArgumentBuilder : IGraphQlArgumentBuilder
 
         if (context.Value is JProperty jProperty)
         {
-            if (RegexWhiteSpace.IsMatch(jProperty.Name))
-                throw new ArgumentException($"JSON object keys used as GraphQL arguments must not contain whitespace; key: {jProperty.Name}");
-
-            graphQlString = $"{jProperty.Name}:{(context.Options.Formatting == Formatting.Indented ? " " : null)}{GraphQlQueryHelper.BuildArgumentValue(jProperty.Value, null, context.Options, context.Level)}";
+            graphQlString = BuildJsonPropertyArgument(jProperty.Name, jProperty.Value, context);
             return true;
         }
 
@@ -412,8 +499,65 @@ public class DefaultGraphQlArgumentBuilder : IGraphQlArgumentBuilder
         }
 #endif
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+        if (context.Value is global::System.Text.Json.Nodes.JsonNode jsonNode)
+        {
+            graphQlString = GraphQlQueryHelper.BuildArgumentValue(global::System.Text.Json.JsonSerializer.SerializeToElement(jsonNode), null, context.Options, context.Level);
+            return true;
+        }
+
+        if (context.Value is global::System.Text.Json.JsonElement jsonElement)
+        {
+            switch (jsonElement.ValueKind)
+            {
+                case global::System.Text.Json.JsonValueKind.Null:
+                case global::System.Text.Json.JsonValueKind.Undefined:
+                    graphQlString = "null";
+                    return true;
+
+                case global::System.Text.Json.JsonValueKind.Number:
+                    graphQlString = jsonElement.GetRawText();
+                    return true;
+
+                case global::System.Text.Json.JsonValueKind.True:
+                    graphQlString = "true";
+                    return true;
+
+                case global::System.Text.Json.JsonValueKind.False:
+                    graphQlString = "false";
+                    return true;
+
+                case global::System.Text.Json.JsonValueKind.String:
+                    graphQlString = $"\"{GraphQlQueryHelper.EscapeGraphQlStringValue(jsonElement.GetString())}\"";
+                    return true;
+
+                case global::System.Text.Json.JsonValueKind.Object:
+                    graphQlString = GraphQlQueryHelper.BuildEnumerableArgument(jsonElement.EnumerateObject(), null, context.Options, context.Level + 1, '{', '}');
+                    return true;
+
+                case global::System.Text.Json.JsonValueKind.Array:
+                    graphQlString = GraphQlQueryHelper.BuildEnumerableArgument(jsonElement.EnumerateArray(), null, context.Options, context.Level, '[', ']');
+                    return true;
+            }
+        }
+
+        if (context.Value is global::System.Text.Json.JsonProperty jsonProperty)
+        {
+            graphQlString = BuildJsonPropertyArgument(jsonProperty.Name, jsonProperty.Value, context);
+            return true;
+        }
+#endif
+
         graphQlString = null;
         return false;
+    }
+
+    private static string BuildJsonPropertyArgument(string propertyName, object propertyValue, GraphQlArgumentBuilderContext context)
+    {
+        if (RegexWhiteSpace.IsMatch(propertyName))
+            throw new ArgumentException($"JSON object keys used as GraphQL arguments must not contain whitespace; key: {propertyName}");
+
+        return $"{propertyName}:{(context.Options.Formatting == Formatting.Indented ? " " : null)}{GraphQlQueryHelper.BuildArgumentValue(propertyValue, null, context.Options, context.Level)}";
     }
 }
 

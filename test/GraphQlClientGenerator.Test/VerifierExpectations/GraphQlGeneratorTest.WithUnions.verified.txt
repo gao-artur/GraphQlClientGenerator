@@ -53,6 +53,9 @@ public static class GraphQlTypes
 #endregion
 
 #region enums
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(StringEnumSystemTextJsonConverter))]
+#endif
 public enum UnderscoreNamedEnum
 {
     an_enum_value_1,
@@ -710,6 +713,9 @@ public partial class UnderscoreNamedInput : IGraphQlInputObject
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<UnderscoreNamedEnum?>))]
     #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<UnderscoreNamedEnum?>))]
+    #endif
     public QueryBuilderParameter<UnderscoreNamedEnum?>? UnderscoreNamedFieldEnum
     {
         get => (QueryBuilderParameter<UnderscoreNamedEnum?>?)_underscoreNamedFieldEnum.Value;
@@ -718,6 +724,9 @@ public partial class UnderscoreNamedInput : IGraphQlInputObject
 
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<ICollection<UnderscoreNamedEnum>?>))]
+    #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<ICollection<UnderscoreNamedEnum>?>))]
     #endif
     public QueryBuilderParameter<ICollection<UnderscoreNamedEnum>?>? UnderscoreNamedFieldEnumCollection
     {
@@ -742,6 +751,9 @@ public partial class InputType : IGraphQlInputObject
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<string?>))]
     #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<string?>))]
+    #endif
     public QueryBuilderParameter<string?>? TextValue
     {
         get => (QueryBuilderParameter<string?>?)_textValue.Value;
@@ -750,6 +762,9 @@ public partial class InputType : IGraphQlInputObject
 
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<UnderscoreNamedEnum?>))]
+    #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<UnderscoreNamedEnum?>))]
     #endif
     public QueryBuilderParameter<UnderscoreNamedEnum?>? EnumValue
     {
@@ -760,6 +775,9 @@ public partial class InputType : IGraphQlInputObject
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<UnderscoreNamedEnum?>))]
     #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<UnderscoreNamedEnum?>))]
+    #endif
     public QueryBuilderParameter<UnderscoreNamedEnum?>? EnumValue2
     {
         get => (QueryBuilderParameter<UnderscoreNamedEnum?>?)_enumValue2.Value;
@@ -768,6 +786,9 @@ public partial class InputType : IGraphQlInputObject
 
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<string?>))]
+    #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<string?>))]
     #endif
     public QueryBuilderParameter<string?>? TextValue2
     {
@@ -796,6 +817,9 @@ public partial class Collision4 : IGraphQlInputObject
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<string?>))]
     #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<string?>))]
+    #endif
     public QueryBuilderParameter<string?>? Collision
     {
         get => (QueryBuilderParameter<string?>?)_collision.Value;
@@ -804,6 +828,9 @@ public partial class Collision4 : IGraphQlInputObject
 
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<string?>))]
+    #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<string?>))]
     #endif
     public QueryBuilderParameter<string?>? Collision2
     {
@@ -814,6 +841,9 @@ public partial class Collision4 : IGraphQlInputObject
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<string?>))]
     #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<string?>))]
+    #endif
     public QueryBuilderParameter<string?>? CollisionInput
     {
         get => (QueryBuilderParameter<string?>?)_collisionInput.Value;
@@ -822,6 +852,9 @@ public partial class Collision4 : IGraphQlInputObject
 
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<string?>))]
+    #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<string?>))]
     #endif
     public QueryBuilderParameter<string?>? CollisionInputObject
     {
@@ -832,6 +865,9 @@ public partial class Collision4 : IGraphQlInputObject
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<string?>))]
     #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<string?>))]
+    #endif
     public QueryBuilderParameter<string?>? CollisionDataRecord
     {
         get => (QueryBuilderParameter<string?>?)_collisionDataRecord.Value;
@@ -840,6 +876,9 @@ public partial class Collision4 : IGraphQlInputObject
 
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<string?>))]
+    #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<string?>))]
     #endif
     public QueryBuilderParameter<string?>? CollisionRecord
     {
@@ -874,28 +913,46 @@ public partial class SimpleObjectType
     public ICollection<SimpleObjectType?>? NestedList { get; set; }
 }
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(GraphQlInterfaceSystemTextJsonConverter))]
+#endif
 public partial interface IUnionType
 {
 }
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(GraphQlInterfaceSystemTextJsonConverter))]
+#endif
 public partial interface INamedType
 {
     string? Name { get; set; }
 }
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(GraphQlInterfaceSystemTextJsonConverter))]
+#endif
 public partial interface IWithOnlyDeprecatedFields
 {
 }
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(GraphQlInterfaceSystemTextJsonConverter))]
+#endif
 public partial interface IOtherWithName
 {
     string? Name { get; set; }
 }
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(GraphQlInterfaceSystemTextJsonConverter))]
+#endif
 public partial interface IBaseType : INamedType, IOtherWithName
 {
 }
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(GraphQlInterfaceSystemTextJsonConverter))]
+#endif
 public partial interface IValueAccessor
 {
     string? Value { get; set; }
@@ -907,6 +964,9 @@ public partial class ValueAccessorObject : IValueAccessor
     public string? Value { get; set; }
 }
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(GraphQlInterfaceSystemTextJsonConverter))]
+#endif
 public partial interface IWithValueAccessor
 {
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
@@ -923,6 +983,9 @@ public partial interface IWithValueAccessor
     IEnumerable<IEnumerable<IValueAccessor>>? NestedAccessors { get; set; }
 }
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(GraphQlInterfaceSystemTextJsonConverter))]
+#endif
 public partial interface IWithValueAccessorObject : IWithValueAccessor
 {
     new ValueAccessorObject? Accessor { get; set; }

@@ -145,9 +145,6 @@ public static class CSharpHelper
     internal static bool IsCollectionExpressionSupported(this CSharpVersion cSharpVersion) =>
         cSharpVersion >= CSharpVersion.CSharp12;
 
-    internal static bool IsSystemTextJsonSupported(this CSharpVersion cSharpVersion) =>
-        cSharpVersion >= CSharpVersion.CSharp12;
-
     internal static bool IsFieldKeywordSupported(this CSharpVersion cSharpVersion) =>
         cSharpVersion >= CSharpVersion.CSharp12;
 }

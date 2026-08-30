@@ -11,6 +11,8 @@ public class GraphQlGenerator(GraphQlGeneratorConfiguration configuration = null
 
     public const string PreprocessorDirectiveDisableNewtonsoftJson = "GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON";
 
+    public const string PreprocessorDirectiveDisableSystemTextJson = "GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON";
+
     public const string RequiredNamespaces =
         $"""
         using System;
@@ -599,6 +601,16 @@ public class GraphQlGenerator(GraphQlGeneratorConfiguration configuration = null
             writer.Write(graphQlType.Name);
             writer.WriteLine("\")]");
         }
+        else if (graphQlType.Kind is GraphQlTypeKind.Interface or GraphQlTypeKind.Union)
+        {
+            writer.Write(indentation);
+            writer.Write("#if !");
+            writer.WriteLine(PreprocessorDirectiveDisableSystemTextJson);
+            writer.Write(indentation);
+            writer.WriteLine("[System.Text.Json.Serialization.JsonConverter(typeof(GraphQlInterfaceSystemTextJsonConverter))]");
+            writer.Write(indentation);
+            writer.WriteLine("#endif");
+        }
 
         writer.Write(indentation);
         writer.Write(GetMemberAccessibility());
@@ -736,12 +748,31 @@ public class GraphQlGenerator(GraphQlGeneratorConfiguration configuration = null
             writer.WriteLine("    #endif");
         }
 
-        if (isJsonPropertyAttributeNeeded && _configuration.CSharpVersion.IsSystemTextJsonSupported())
+        var isPreprocessorDirectiveDisableSystemTextJsonRequired = isJsonPropertyAttributeNeeded || isOwnerInputObjectInRichMode;
+        if (isPreprocessorDirectiveDisableSystemTextJsonRequired)
         {
             writer.Write(indentation);
-            writer.Write("    [System.Text.Json.Serialization.JsonPropertyName(\"");
-            writer.Write(member.Name);
-            writer.WriteLine("\")]");
+            writer.Write("    #if !");
+            writer.WriteLine(PreprocessorDirectiveDisableSystemTextJson);
+
+            if (isJsonPropertyAttributeNeeded)
+            {
+                writer.Write(indentation);
+                writer.Write("    [System.Text.Json.Serialization.JsonPropertyName(\"");
+                writer.Write(member.Name);
+                writer.WriteLine("\")]");
+            }
+
+            if (isOwnerInputObjectInRichMode)
+            {
+                writer.Write(indentation);
+                writer.Write("    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<");
+                writer.Write(propertyTypeDescription.NetTypeName);
+                writer.WriteLine(">))]");
+            }
+
+            writer.Write(indentation);
+            writer.WriteLine("    #endif");
         }
 
         writer.Write(indentation);
@@ -1575,6 +1606,13 @@ public class GraphQlGenerator(GraphQlGeneratorConfiguration configuration = null
 
         GenerateCodeComments(writer, graphQlType.Description, context.IndentationSize);
         var indentation = GetIndentation(context.IndentationSize);
+        writer.Write(indentation);
+        writer.Write("#if !");
+        writer.WriteLine(PreprocessorDirectiveDisableSystemTextJson);
+        writer.Write(indentation);
+        writer.WriteLine("[System.Text.Json.Serialization.JsonConverter(typeof(StringEnumSystemTextJsonConverter))]");
+        writer.Write(indentation);
+        writer.WriteLine("#endif");
         writer.Write(indentation);
         writer.Write("public enum ");
         writer.WriteLine(enumName);

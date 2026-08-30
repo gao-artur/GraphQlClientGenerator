@@ -56,6 +56,9 @@ public static class GraphQlTypes
 [Description(@"Home
 aavatar
 types")]
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(StringEnumSystemTextJsonConverter))]
+#endif
 public enum Avatar
 {
     [EnumMember(Value = "floorhouse1")] Floorhouse1,
@@ -69,6 +72,9 @@ public enum Avatar
     rowhouse
 }
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(StringEnumSystemTextJsonConverter))]
+#endif
 public enum PriceLevel
 {
     [EnumMember(Value = "low")] Low,
@@ -76,6 +82,9 @@ public enum PriceLevel
     [EnumMember(Value = "high")] High
 }
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(StringEnumSystemTextJsonConverter))]
+#endif
 public enum Resolution
 {
     [EnumMember(Value = "annual")] Annual,

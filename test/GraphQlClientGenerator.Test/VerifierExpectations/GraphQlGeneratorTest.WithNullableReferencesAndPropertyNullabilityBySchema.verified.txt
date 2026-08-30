@@ -103,6 +103,9 @@ public static class GraphQlTypes
 #endregion
 
 #region enums
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(StringEnumSystemTextJsonConverter))]
+#endif
 public enum Avatar
 {
     [EnumMember(Value = "floorhouse1")] Floorhouse1,
@@ -114,6 +117,9 @@ public enum Avatar
     [EnumMember(Value = "rowhouse")] Rowhouse
 }
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(StringEnumSystemTextJsonConverter))]
+#endif
 public enum Resolution
 {
     [EnumMember(Value = "annual")] Annual,
@@ -2933,6 +2939,9 @@ public partial class HomeProfileQuestionAnswer : IGraphQlInputObject
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<string?>))]
     #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<string?>))]
+    #endif
     public QueryBuilderParameter<string?>? PropertyName
     {
         get => (QueryBuilderParameter<string?>?)_propertyName.Value;
@@ -2941,6 +2950,9 @@ public partial class HomeProfileQuestionAnswer : IGraphQlInputObject
 
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<object?>))]
+    #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<object?>))]
     #endif
     public QueryBuilderParameter<object?>? Value
     {
@@ -2963,6 +2975,9 @@ public partial class AppStateMutation : IGraphQlInputObject
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<AppStateJourneyMutation?>))]
     #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<AppStateJourneyMutation?>))]
+    #endif
     public QueryBuilderParameter<AppStateJourneyMutation?>? Journey
     {
         get => (QueryBuilderParameter<AppStateJourneyMutation?>?)_journey.Value;
@@ -2971,6 +2986,9 @@ public partial class AppStateMutation : IGraphQlInputObject
 
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<ICollection<AppStateFronScreenMutation?>?>))]
+    #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<ICollection<AppStateFronScreenMutation?>?>))]
     #endif
     public QueryBuilderParameter<ICollection<AppStateFronScreenMutation?>?>? FrontScreens
     {
@@ -2991,6 +3009,9 @@ public partial class AppStateJourneyMutation : IGraphQlInputObject
 
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<bool?>))]
+    #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<bool?>))]
     #endif
     public QueryBuilderParameter<bool?>? HasVisitedPairDevices
     {
@@ -3013,6 +3034,9 @@ public partial class AppStateFronScreenMutation : IGraphQlInputObject
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<string?>))]
     #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<string?>))]
+    #endif
     public QueryBuilderParameter<string?>? HomeId
     {
         get => (QueryBuilderParameter<string?>?)_homeId.Value;
@@ -3022,6 +3046,9 @@ public partial class AppStateFronScreenMutation : IGraphQlInputObject
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<ICollection<string?>?>))]
     #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<ICollection<string?>?>))]
+    #endif
     public QueryBuilderParameter<ICollection<string?>?>? Bubbles
     {
         get => (QueryBuilderParameter<ICollection<string?>?>?)_bubbles.Value;
@@ -3030,6 +3057,9 @@ public partial class AppStateFronScreenMutation : IGraphQlInputObject
 
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonConverter(typeof(QueryBuilderParameterConverter<ICollection<string?>?>))]
+    #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(QueryBuilderParameterSystemTextJsonConverter<ICollection<string?>?>))]
     #endif
     public QueryBuilderParameter<ICollection<string?>?>? BubblesSortOrder
     {

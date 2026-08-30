@@ -47,6 +47,9 @@ public static class GraphQlTypes
 #endregion
 
 #region enums
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(StringEnumSystemTextJsonConverter))]
+#endif
 public enum Avatar
 {
     [EnumMember(Value = "floorhouse1")] Floorhouse1,
@@ -58,6 +61,9 @@ public enum Avatar
     [EnumMember(Value = "rowhouse")] Rowhouse
 }
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(StringEnumSystemTextJsonConverter))]
+#endif
 public enum PriceLevel
 {
     [EnumMember(Value = "low")] Low,
@@ -65,6 +71,9 @@ public enum PriceLevel
     [EnumMember(Value = "high")] High
 }
 
+#if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+[System.Text.Json.Serialization.JsonConverter(typeof(StringEnumSystemTextJsonConverter))]
+#endif
 public enum Resolution
 {
     [EnumMember(Value = "annual")] Annual,
@@ -142,6 +151,9 @@ public class Home
     public ICollection<Comparison> Comparisons { get { return _comparisons; } set { _comparisons = value; } }
     #if !GRAPHQL_GENERATOR_DISABLE_NEWTONSOFT_JSON
     [JsonProperty("comparison_current_month")]
+    #endif
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonPropertyName("comparison_current_month")]
     #endif
     public Comparison ComparisonCurrentMonth { get { return _comparisonCurrentMonth; } set { _comparisonCurrentMonth = value; } }
     public object Profile { get { return _profile; } set { _profile = value; } }

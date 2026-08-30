@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Collections;
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -22,10 +23,10 @@ public class GraphQlGeneratorTest(ITestOutputHelper outputHelper)
         new(schema, new StringWriter(builder), objectTypes) { LogMessage = logMessage };
 
     private static readonly IReadOnlyList<int> ExpectedFileSizes = [
-        447, 476, 1400, 1180, 979, 4292, 520, 570, 2133, 1943, 456, 1115, 1174, 1686, 1780, 757, 495, 1612, 499, 1439, 793, 492, 1470, 4153, 964, 763, 3704, 4984, 479, 1417, 567, 2231, 615, 2415, 1226, 7008, 448,
-        1251, 572, 677, 2839, 2588, 490, 1494, 462, 1313, 368, 6096, 595, 2251, 1958, 922, 7945, 880, 1531, 494, 1520, 4769, 17356, 866, 1627, 628, 2713, 10002, 973, 5275, 1102, 553, 3333, 7245, 435, 1437, 544, 502,
+        447, 476, 1400, 1180, 979, 4292, 520, 570, 2732, 1943, 456, 1305, 1174, 2118, 1780, 917, 495, 1612, 499, 1439, 793, 492, 1470, 4153, 964, 763, 3704, 4984, 479, 1417, 567, 2231, 615, 2415, 1226, 7008, 448,
+        1251, 572, 677, 2839, 2588, 490, 1494, 462, 1313, 553, 6096, 595, 2251, 1958, 922, 7945, 880, 1913, 494, 1520, 4769, 17356, 866, 1627, 628, 2713, 10002, 973, 5275, 1102, 553, 3333, 7245, 435, 1437, 544, 502,
         1550, 2002, 576, 2287, 532, 1827, 622, 2620, 768, 572, 2033, 582, 2204, 3656, 756, 3899, 589, 2199, 677, 538, 1861, 2970, 1073, 796, 4018, 5759, 899, 4541, 521, 1794, 424, 1381, 665, 752, 3580, 2914, 451,
-        1203, 481, 590, 560, 2014, 549, 1877, 2328, 560, 2255, 840, 854, 4478, 939, 531, 1850, 873, 4594, 585, 2117, 502, 1493, 490, 2695, 5110, 587, 2243, 559, 1986, 562, 1231, 3653, 1986];
+        1203, 641, 590, 560, 2014, 549, 1877, 2328, 560, 2255, 840, 854, 4478, 939, 531, 1850, 873, 4594, 585, 2117, 502, 1493, 490, 2695, 5110, 587, 2243, 559, 1986, 562, 1231, 3653, 1986];
 
     [Theory]
     [InlineData(false)]
@@ -863,6 +864,125 @@ public class GraphQlGeneratorTest(ITestOutputHelper outputHelper)
     }
 
     [Fact]
+    public void SystemTextJsonSerialization()
+    {
+        var configuration = new GraphQlGeneratorConfiguration { JsonPropertyGeneration = JsonPropertyGenerationOption.Always };
+
+        var schema = DeserializeTestSchema("TestSchemaWithUnions");
+        var stringBuilder = new StringBuilder();
+        new GraphQlGenerator(configuration).Generate(CreateGenerationContext(stringBuilder, schema));
+
+        stringBuilder.AppendLine();
+        stringBuilder.AppendLine(
+            """
+            public class TestQueryBuilder : GraphQlQueryBuilder<TestQueryBuilder>
+            {
+                private static readonly GraphQlFieldMetadata[] AllFieldMetadata = [new GraphQlFieldMetadata { Name = "testField" }];
+
+                protected override string TypeName => "Test";
+
+                public override IReadOnlyList<GraphQlFieldMetadata> AllFields => AllFieldMetadata;
+
+                public TestQueryBuilder WithTestField(QueryBuilderParameter<object> objectParameter) =>
+                    WithScalarField("testField", null, null, new List<QueryBuilderArgumentInfo> { new QueryBuilderArgumentInfo { ArgumentName = "objectParameter", ArgumentValue = objectParameter } });
+            }
+            """);
+
+        const string assemblyName = "SystemTextJsonTestAssembly";
+        CompileIntoAssembly(stringBuilder.ToString(), assemblyName);
+
+        var queryType = Type.GetType($"{assemblyName}.Query, {assemblyName}").ShouldNotBeNull();
+
+        var serializerOptions =
+            new System.Text.Json.JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            };
+
+        const string responseJson =
+            """
+            {
+              "union": [
+                { "__typename": "ConcreteType1", "name": "name 1", "concreteType1Field": "value 1", "accessor": { "value": "accessor value" } },
+                { "__typename": "ConcreteType2", "name": "name 2", "concreteType2Field": "value 2" },
+                { "__typename": "ConcreteType3", "name": "name 3", "concreteType3Field": "value 3" }
+              ],
+              "interface": { "__typename": "ConcreteType2", "name": "interface name" },
+              "interfaces": [ { "__typename": "ConcreteType3", "name": "name 4" } ],
+              "underscore_named_field": { "underscore_named_field_enum": "an_enum_value_2", "underscore_named_field_enum_collection": [ "an_enum_value_1", "an_enum_value_2" ] }
+            }
+            """;
+
+        var query = System.Text.Json.JsonSerializer.Deserialize(responseJson, queryType, serializerOptions).ShouldNotBeNull();
+
+        var unionItems = ((IEnumerable)GetPropertyValue(query, "Union")).ShouldNotBeNull().Cast<object>().ToArray();
+        unionItems.Length.ShouldBe(3);
+        unionItems[0].GetType().FullName.ShouldBe($"{assemblyName}.ConcreteType1");
+        GetPropertyValue(unionItems[0], "Name").ShouldBe("name 1");
+        GetPropertyValue(unionItems[0], "ConcreteType1Field").ShouldBe("value 1");
+        var accessor = GetPropertyValue(unionItems[0], "Accessor").ShouldNotBeNull();
+        GetPropertyValue(accessor, "Value").ShouldBe("accessor value");
+        unionItems[1].GetType().FullName.ShouldBe($"{assemblyName}.ConcreteType2");
+        GetPropertyValue(unionItems[1], "ConcreteType2Field").ShouldBe("value 2");
+        unionItems[2].GetType().FullName.ShouldBe($"{assemblyName}.ConcreteType3");
+        GetPropertyValue(unionItems[2], "ConcreteType3Field").ShouldBe("value 3");
+
+        var interfaceValue = GetPropertyValue(query, "Interface").ShouldNotBeNull();
+        interfaceValue.GetType().FullName.ShouldBe($"{assemblyName}.ConcreteType2");
+        GetPropertyValue(interfaceValue, "Name").ShouldBe("interface name");
+
+        var interfaceItems = ((IEnumerable)GetPropertyValue(query, "Interfaces")).ShouldNotBeNull().Cast<object>().ToArray();
+        interfaceItems.Length.ShouldBe(1);
+        interfaceItems[0].GetType().FullName.ShouldBe($"{assemblyName}.ConcreteType3");
+
+        var underscoreNamedField = GetPropertyValue(query, "UnderscoreNamedField").ShouldNotBeNull();
+        GetPropertyValue(underscoreNamedField, "UnderscoreNamedFieldEnum").ToString().ShouldBe("AnEnumValue2");
+        ((IEnumerable)GetPropertyValue(underscoreNamedField, "UnderscoreNamedFieldEnumCollection")).Cast<object>().Select(v => v.ToString()).ShouldBe(["AnEnumValue1", "AnEnumValue2"]);
+
+        var serializedQuery = System.Text.Json.JsonSerializer.Serialize(query, queryType, serializerOptions);
+        serializedQuery.ShouldBe("""{"union":[{"name":"name 1","concreteType1Field":"value 1","accessor":{"value":"accessor value"}},{"name":"name 2","concreteType2Field":"value 2"},{"name":"name 3","concreteType3Field":"value 3"}],"interface":{"name":"interface name"},"interfaces":[{"name":"name 4"}],"underscore_named_field":{"underscore_named_field_enum":"an_enum_value_2","underscore_named_field_enum_collection":["an_enum_value_1","an_enum_value_2"]}}""");
+
+        var inputObjectType = Type.GetType($"{assemblyName}.UnderscoreNamedInput, {assemblyName}").ShouldNotBeNull();
+        var enumType = Type.GetType($"{assemblyName}.UnderscoreNamedEnum, {assemblyName}").ShouldNotBeNull();
+        var inputObject = Activator.CreateInstance(inputObjectType);
+        inputObjectType.GetProperty("UnderscoreNamedFieldEnum").ShouldNotBeNull().SetValue(inputObject, CreateParameter(assemblyName, Enum.Parse(enumType, "AnEnumValue1")));
+        var enumCollection = Array.CreateInstance(enumType, 2);
+        enumCollection.SetValue(Enum.Parse(enumType, "AnEnumValue1"), 0);
+        enumCollection.SetValue(Enum.Parse(enumType, "AnEnumValue2"), 1);
+        inputObjectType.GetProperty("UnderscoreNamedFieldEnumCollection").ShouldNotBeNull()
+            .SetValue(inputObject, CreateParameter(assemblyName, enumCollection, netParameterType: typeof(ICollection<>).MakeGenericType(enumType)));
+
+        var inputObjectJson = System.Text.Json.JsonSerializer.Serialize(inputObject, inputObjectType);
+        inputObjectJson.ShouldBe("""{"underscore_named_field_enum":"an_enum_value_1","underscore_named_field_enum_collection":["an_enum_value_1","an_enum_value_2"]}""");
+
+        var deserializedInputObject = System.Text.Json.JsonSerializer.Deserialize(inputObjectJson, inputObjectType);
+        var enumParameterValue = GetPropertyValue(deserializedInputObject, "UnderscoreNamedFieldEnum").ShouldNotBeNull();
+        var converter = enumParameterValue.GetType().GetMethod("op_Implicit", [enumParameterValue.GetType()]).ShouldNotBeNull();
+        converter.Invoke(null, [enumParameterValue]).ShouldBe(Enum.Parse(enumType, "AnEnumValue1"));
+
+        const string argumentJson = """{ "rootProperty1": "root \"quoted\" value", "rootProperty2": 123.456, "rootProperty3": true, "rootProperty4": null, "rootProperty5": { "nestedProperty": 987 }, "rootProperty6": [ "item1", 2 ] }""";
+        const string expectedQuery = """{testField(objectParameter:{rootProperty1:"root \"quoted\" value",rootProperty2:123.456,rootProperty3:true,rootProperty4:null,rootProperty5:{nestedProperty:987},rootProperty6:["item1",2]})}""";
+
+        var testQueryBuilderType = Type.GetType($"{assemblyName}.TestQueryBuilder, {assemblyName}").ShouldNotBeNull();
+        var withTestFieldMethod = testQueryBuilderType.GetMethod("WithTestField", BindingFlags.Instance | BindingFlags.Public).ShouldNotBeNull();
+        var clearMethod = testQueryBuilderType.GetMethod("Clear", BindingFlags.Instance | BindingFlags.Public).ShouldNotBeNull();
+        var testQueryBuilderInstance = Activator.CreateInstance(testQueryBuilderType);
+
+        using var jsonDocument = System.Text.Json.JsonDocument.Parse(argumentJson);
+        withTestFieldMethod.Invoke(testQueryBuilderInstance, [CreateParameter(assemblyName, jsonDocument.RootElement, netParameterType: typeof(object))]);
+        BuildQuery(testQueryBuilderInstance).ShouldBe(expectedQuery);
+
+        clearMethod.Invoke(testQueryBuilderInstance, null);
+
+        var jsonNode = System.Text.Json.Nodes.JsonNode.Parse(argumentJson);
+        withTestFieldMethod.Invoke(testQueryBuilderInstance, [CreateParameter(assemblyName, jsonNode, netParameterType: typeof(object))]);
+        BuildQuery(testQueryBuilderInstance).ShouldBe(expectedQuery);
+    }
+
+    private static object GetPropertyValue(object @object, string propertyName) =>
+        @object.GetType().GetProperty(propertyName).ShouldNotBeNull().GetValue(@object);
+
+    [Fact]
     public void QueryParameterReverseMapping()
     {
         var schema = DeserializeTestSchema("TestSchemaWithUnions");
@@ -912,8 +1032,13 @@ public class GraphQlGeneratorTest(ITestOutputHelper outputHelper)
 
     private static string StripBaseClasses(string sourceCode)
     {
-        using var reader = new StreamReader(typeof(GraphQlGenerator).Assembly.GetManifestResourceStream("GraphQlClientGenerator.BaseClasses.cs").ShouldNotBeNull());
-        return sourceCode.Replace($"#region base classes{Environment.NewLine}{reader.ReadToEnd()}{Environment.NewLine}#endregion", null).Trim();
+        const string regionStart = "#region base classes";
+        const string regionEnd = "#endregion";
+        var startIndex = sourceCode.IndexOf(regionStart, StringComparison.Ordinal);
+        startIndex.ShouldBeGreaterThanOrEqualTo(0);
+        var endIndex = sourceCode.IndexOf(regionEnd, startIndex, StringComparison.Ordinal);
+        endIndex.ShouldBeGreaterThan(startIndex);
+        return sourceCode.Remove(startIndex, endIndex + regionEnd.Length - startIndex).Trim();
     }
 
     private class TestSingleFileGenerationContext(GraphQlSchema schema, TextWriter writer, GeneratedObjectType objectTypes = GeneratedObjectType.All)

@@ -11,6 +11,9 @@ using Newtonsoft.Json;
 
 namespace GraphQlGeneratorTest
 {
+    #if !GRAPHQL_GENERATOR_DISABLE_SYSTEM_TEXT_JSON
+    [System.Text.Json.Serialization.JsonConverter(typeof(StringEnumSystemTextJsonConverter))]
+    #endif
     public enum Avatar
     {
         [EnumMember(Value = "floorhouse1")] Floorhouse1,

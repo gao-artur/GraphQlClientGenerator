@@ -15,6 +15,10 @@ public class MultipleFileGenerationContext : GenerationContext
             <PackageReference Include="Newtonsoft.Json" Version="13.*" />
           </ItemGroup>
 
+          <ItemGroup Condition="!$(DefineConstants.Contains({GraphQlGenerator.PreprocessorDirectiveDisableSystemTextJson}))">
+            <PackageReference Include="System.Text.Json" Version="8.*" />
+          </ItemGroup>
+
         </Project>
 
         """;

@@ -46,6 +46,7 @@ internal static class CompilationHelper
         var systemDynamicRuntimeReference = MetadataReference.CreateFromFile(Assembly.Load("System.Dynamic.Runtime").Location);
         var systemIoReference = MetadataReference.CreateFromFile(Assembly.Load("System.IO").Location);
         var jsonNetReference = MetadataReference.CreateFromFile(Assembly.Load("Newtonsoft.Json").Location);
+        var systemTextJsonReference = MetadataReference.CreateFromFile(Assembly.Load("System.Text.Json").Location);
         var runtimeSerializationReference = MetadataReference.CreateFromFile(typeof(EnumMemberAttribute).Assembly.Location);
         var componentModelReference = MetadataReference.CreateFromFile(typeof(DescriptionAttribute).Assembly.Location);
         var componentModelTypeConverterReference = MetadataReference.CreateFromFile(Assembly.Load("System.ComponentModel.TypeConverter").Location);
@@ -68,6 +69,7 @@ internal static class CompilationHelper
                     systemCollectionsReference,
                     systemGlobalizationReference,
                     jsonNetReference,
+                    systemTextJsonReference,
                     linqReference,
                     linqExpressionsReference,
                     netStandardReference
